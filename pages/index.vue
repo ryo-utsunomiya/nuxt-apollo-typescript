@@ -11,6 +11,7 @@
 
 <script lang="ts">
 import Vue from 'vue'
+import gql from 'graphql-tag'
 
 // GraphQLのレスポンスに型をつける
 interface Film {
@@ -23,51 +24,38 @@ interface Edge {
 interface FilmConnection {
   edges: Edge[]
 }
-interface ResponseData {
-  allFilms: FilmConnection
-}
-interface Response {
-  data: ResponseData
-}
 
 // Vueのdataに型をつける
-interface VueData {
-  films: Film[]
+interface Data {
+  allFilms: FilmConnection
 }
 
 export default Vue.extend({
-  data(): VueData {
+  data(): Data {
     return {
-      films: []
+      allFilms: {
+        edges: []
+      }
     }
   },
-  async created() {
-    const query = `
-{
-  allFilms(first: 3) {
-    edges {
-      node {
-        episodeID
-        title
-      }
+  computed: {
+    films(): Film[] {
+      return this.allFilms.edges.map((e) => ({ ...e.node }))
     }
-  }
-}
-`
-    const res = await fetch(
-      'https://swapi-graphql.netlify.com/.netlify/functions/index',
-      {
-        method: 'POST',
-        body: JSON.stringify({
-          query
-        }),
-        headers: {
-          'Content-Type': 'application/json'
+  },
+  apollo: {
+    allFilms: gql`
+      query {
+        allFilms(first: 3) {
+          edges {
+            node {
+              episodeID
+              title
+            }
+          }
         }
       }
-    ).then<Response>((res) => res.json())
-
-    this.films = res.data.allFilms.edges.map((e) => ({ ...e.node }))
+    `
   }
 })
 </script>
