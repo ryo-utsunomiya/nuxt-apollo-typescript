@@ -12,6 +12,7 @@
 <script lang="ts">
 import Vue from 'vue'
 
+// GraphQLのレスポンスに型をつける
 interface Film {
   episodeID: number
   title: string
@@ -19,12 +20,23 @@ interface Film {
 interface Edge {
   node: Film
 }
-interface Data {
+interface FilmConnection {
+  edges: Edge[]
+}
+interface ResponseData {
+  allFilms: FilmConnection
+}
+interface Response {
+  data: ResponseData
+}
+
+// Vueのdataに型をつける
+interface VueData {
   films: Film[]
 }
 
 export default Vue.extend({
-  data(): Data {
+  data(): VueData {
     return {
       films: []
     }
@@ -53,9 +65,9 @@ export default Vue.extend({
           'Content-Type': 'application/json'
         }
       }
-    ).then((res) => res.json())
+    ).then<Response>((res) => res.json())
 
-    this.films = res.data.allFilms.edges.map((e: Edge) => ({ ...e.node }))
+    this.films = res.data.allFilms.edges.map((e) => ({ ...e.node }))
   }
 })
 </script>
