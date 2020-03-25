@@ -12,35 +12,25 @@
 <script lang="ts">
 import Vue from 'vue'
 import gql from 'graphql-tag'
-
-// GraphQLのレスポンスに型をつける
-interface Film {
-  episodeID: number
-  title: string
-}
-interface Edge {
-  node: Film
-}
-interface FilmConnection {
-  edges: Edge[]
-}
+import { FilmsConnection, Film } from '~/lib/GraphQL/generated'
 
 // Vueのdataに型をつける
 interface Data {
-  allFilms: FilmConnection
+  allFilms?: FilmsConnection
 }
 
 export default Vue.extend({
   data(): Data {
     return {
-      allFilms: {
-        edges: []
-      }
+      allFilms: undefined
     }
   },
   computed: {
     films(): Film[] {
-      return this.allFilms.edges.map((e) => ({ ...e.node }))
+      if (this.allFilms == null || this.allFilms.edges == null) return []
+      return this.allFilms.edges
+        .map((e) => e?.node)
+        .filter((f): f is Film => f != null)
     }
   },
   apollo: {
